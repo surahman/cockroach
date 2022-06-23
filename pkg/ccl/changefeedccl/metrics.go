@@ -519,21 +519,13 @@ type Metrics struct {
 	ProtectedTimeStamp            time.Time
 	ProtectedTimeStampBehindNanos *metric.Gauge
 
-	muID struct {
+	mu struct {
 		syncutil.Mutex
-		id int
+		id                  int
+		resolved            map[int]hlc.Timestamp
+		protectedTimeStamps map[int]time.Time
 	}
-
-	muResolved struct {
-		syncutil.Mutex
-		resolved map[int]hlc.Timestamp
-	}
-	MaxBehindNanos *metric.Gauge
-
-	muProtectedTimeStamp struct {
-		syncutil.Mutex
-		ProtectedTimeStamps map[int]time.Time
-	}
+	MaxBehindNanos                *metric.Gauge
 	ProtectedTimeStampBehindNanos *metric.Gauge
 }
 
@@ -561,32 +553,32 @@ func MakeMetrics(histogramWindow time.Duration) metric.Struct {
 		ReplanCount:     metric.NewCounter(metaChangefeedReplanCount),
 	}
 
-	m.muResolved.resolved = make(map[int]hlc.Timestamp)
-	m.muID.id = 1 // start the first id at 1 so we can detect initialization
+	m.mu.resolved = make(map[int]hlc.Timestamp)
+	m.mu.id = 1 // start the first id at 1 so we can detect initialization
 	m.MaxBehindNanos = metric.NewFunctionalGauge(metaChangefeedMaxBehindNanos, func() int64 {
 		now := timeutil.Now()
 		var maxBehind time.Duration
-		m.muResolved.Lock()
-		for _, resolved := range m.muResolved.resolved {
+		m.mu.Lock()
+		for _, resolved := range m.mu.resolved {
 			if behind := now.Sub(resolved.GoTime()); behind > maxBehind {
 				maxBehind = behind
 			}
 		}
-		m.muResolved.Unlock()
+		m.mu.Unlock()
 		return maxBehind.Nanoseconds()
 	})
 
-	m.muProtectedTimeStamp.ProtectedTimeStamps = make(map[int]time.Time)
+	m.mu.protectedTimeStamps = make(map[int]time.Time)
 	m.ProtectedTimeStampBehindNanos = metric.NewFunctionalGauge(metaProtectedTimeStampBehindNanos, func() int64 {
 		now := timeutil.Now()
 		maxBehind := now
-		m.muProtectedTimeStamp.Lock()
-		for _, timeStamp := range m.muProtectedTimeStamp.ProtectedTimeStamps {
+		m.mu.Lock()
+		for _, timeStamp := range m.mu.protectedTimeStamps {
 			if timeStamp.Before(maxBehind) {
 				maxBehind = timeStamp
 			}
 		}
-		m.muProtectedTimeStamp.Unlock()
+		m.mu.Unlock()
 		return now.Sub(maxBehind).Nanoseconds()
 	})
 

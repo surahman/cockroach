@@ -970,11 +970,11 @@ func (cf *changeFrontier) Start(ctx context.Context) {
 		}
 	}
 
-	cf.metrics.muID.Lock()
-	cf.metricsID = cf.metrics.muID.id
-	cf.metrics.muID.id++
+	cf.metrics.mu.Lock()
+	cf.metricsID = cf.metrics.mu.id
+	cf.metrics.mu.id++
 	sli.RunningCount.Inc(1)
-	cf.metrics.muID.Unlock()
+	cf.metrics.mu.Unlock()
 	// TODO(dan): It's very important that we de-register from the metric because
 	// if we orphan an entry in there, our monitoring will lie (say the changefeed
 	// is behind when it may not be). We call this in `close` but that doesn't
@@ -1007,22 +1007,16 @@ func (cf *changeFrontier) close() {
 // `changefeed.max_behind_nanos` and
 // `changefeed.protected_time_stamp_behind_nanos`. This method is idempotent.
 func (cf *changeFrontier) closeMetrics() {
-	// Delete this feed from the MaxBehindNanos metric, so it's no longer
-	// considered by the gauge.
-	cf.metrics.muResolved.Lock()
-	delete(cf.metrics.muResolved.resolved, cf.metricsID)
-	cf.metrics.muResolved.Unlock()
-
-	// Delete the protected time stamp for this changefeed from the metric map.
-	cf.metrics.muProtectedTimeStamp.Lock()
-	delete(cf.metrics.muProtectedTimeStamp.ProtectedTimeStamps, cf.metricsID)
-	cf.metrics.muProtectedTimeStamp.Unlock()
-
-	// Set invalid metrics ID for this changefeed.
+	// Delete this feed from the MaxBehindNanos and ProtectedTimeStampBehindNanos
+	// metric, so they are no longer considered by the gauges.
+	cf.metrics.mu.Lock()
 	if cf.metricsID > 0 {
 		cf.sliMetrics.RunningCount.Dec(1)
 	}
+	delete(cf.metrics.mu.resolved, cf.metricsID)
+	delete(cf.metrics.mu.protectedTimeStamps, cf.metricsID)
 	cf.metricsID = -1
+	cf.metrics.mu.Unlock()
 }
 
 // Next is part of the RowSource interface.
@@ -1167,11 +1161,11 @@ func (cf *changeFrontier) forwardFrontier(resolved jobspb.ResolvedSpan) error {
 		// Keeping this after the checkpointJobProgress call will avoid
 		// some duplicates if a restart happens.
 		newResolved := cf.frontier.Frontier()
-		cf.metrics.muResolved.Lock()
+		cf.metrics.mu.Lock()
 		if cf.metricsID != -1 {
-			cf.metrics.muResolved.resolved[cf.metricsID] = newResolved
+			cf.metrics.mu.resolved[cf.metricsID] = newResolved
 		}
-		cf.metrics.muResolved.Unlock()
+		cf.metrics.mu.Unlock()
 
 		return cf.maybeEmitResolved(newResolved)
 	}
@@ -1316,9 +1310,9 @@ func (cf *changeFrontier) manageProtectedTimestamps(
 	cf.lastProtectedTimestampUpdate = timeutil.Now()
 
 	// update the protected time stamp metric map.
-	cf.metrics.muProtectedTimeStamp.Lock()
-	cf.metrics.muProtectedTimeStamp.ProtectedTimeStamps[cf.metricsID] = cf.lastProtectedTimestampUpdate
-	cf.metrics.muProtectedTimeStamp.Unlock()
+	cf.metrics.mu.Lock()
+	cf.metrics.mu.protectedTimeStamps[cf.metricsID] = cf.lastProtectedTimestampUpdate
+	cf.metrics.mu.Unlock()
 
 	pts := cf.flowCtx.Cfg.ProtectedTimestampProvider
 
