@@ -554,17 +554,17 @@ func MakeMetrics(histogramWindow time.Duration) metric.Struct {
 	}
 
 	m.mu.resolved = make(map[int]hlc.Timestamp)
-	m.mu.id = 1 // start the first id at 1 so we can detect initialization
+	m.mu.id = 1 // start the first id at 1, so we can detect initialization
 	m.MaxBehindNanos = metric.NewFunctionalGauge(metaChangefeedMaxBehindNanos, func() int64 {
 		now := timeutil.Now()
 		var maxBehind time.Duration
 		m.mu.Lock()
+		defer m.mu.Unlock()
 		for _, resolved := range m.mu.resolved {
 			if behind := now.Sub(resolved.GoTime()); behind > maxBehind {
 				maxBehind = behind
 			}
 		}
-		m.mu.Unlock()
 		return maxBehind.Nanoseconds()
 	})
 
@@ -573,12 +573,12 @@ func MakeMetrics(histogramWindow time.Duration) metric.Struct {
 		now := timeutil.Now()
 		maxBehind := now
 		m.mu.Lock()
+		defer m.mu.Unlock()
 		for _, timeStamp := range m.mu.protectedTimeStamps {
 			if timeStamp.Before(maxBehind) {
 				maxBehind = timeStamp
 			}
 		}
-		m.mu.Unlock()
 		return now.Sub(maxBehind).Nanoseconds()
 	})
 

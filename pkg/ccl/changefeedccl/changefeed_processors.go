@@ -1010,13 +1010,13 @@ func (cf *changeFrontier) closeMetrics() {
 	// Delete this feed from the MaxBehindNanos and ProtectedTimeStampBehindNanos
 	// metric, so they are no longer considered by the gauges.
 	cf.metrics.mu.Lock()
+	defer cf.metrics.mu.Unlock()
 	if cf.metricsID > 0 {
 		cf.sliMetrics.RunningCount.Dec(1)
 	}
 	delete(cf.metrics.mu.resolved, cf.metricsID)
 	delete(cf.metrics.mu.protectedTimeStamps, cf.metricsID)
 	cf.metricsID = -1
-	cf.metrics.mu.Unlock()
 }
 
 // Next is part of the RowSource interface.
