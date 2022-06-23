@@ -519,12 +519,22 @@ type Metrics struct {
 	ProtectedTimeStamp            time.Time
 	ProtectedTimeStampBehindNanos *metric.Gauge
 
-	mu struct {
+	muID struct {
 		syncutil.Mutex
-		id       int
+		id int
+	}
+
+	muResolved struct {
+		syncutil.Mutex
 		resolved map[int]hlc.Timestamp
 	}
 	MaxBehindNanos *metric.Gauge
+
+	muProtectedTimeStamp struct {
+		syncutil.Mutex
+		ProtectedTimeStamps map[int]time.Time
+	}
+	ProtectedTimeStampBehindNanos *metric.Gauge
 }
 
 // MetricStruct implements the metric.Struct interface.
@@ -551,23 +561,33 @@ func MakeMetrics(histogramWindow time.Duration) metric.Struct {
 		ReplanCount:     metric.NewCounter(metaChangefeedReplanCount),
 	}
 
-	m.mu.resolved = make(map[int]hlc.Timestamp)
-	m.mu.id = 1 // start the first id at 1 so we can detect initialization
+	m.muResolved.resolved = make(map[int]hlc.Timestamp)
+	m.muID.id = 1 // start the first id at 1 so we can detect initialization
 	m.MaxBehindNanos = metric.NewFunctionalGauge(metaChangefeedMaxBehindNanos, func() int64 {
 		now := timeutil.Now()
 		var maxBehind time.Duration
-		m.mu.Lock()
-		for _, resolved := range m.mu.resolved {
+		m.muResolved.Lock()
+		for _, resolved := range m.muResolved.resolved {
 			if behind := now.Sub(resolved.GoTime()); behind > maxBehind {
 				maxBehind = behind
 			}
 		}
-		m.mu.Unlock()
+		m.muResolved.Unlock()
 		return maxBehind.Nanoseconds()
 	})
 
+	m.muProtectedTimeStamp.ProtectedTimeStamps = make(map[int]time.Time)
 	m.ProtectedTimeStampBehindNanos = metric.NewFunctionalGauge(metaProtectedTimeStampBehindNanos, func() int64 {
-		return timeutil.Since(m.ProtectedTimeStamp).Nanoseconds()
+		now := timeutil.Now()
+		maxBehind := now
+		m.muProtectedTimeStamp.Lock()
+		for _, timeStamp := range m.muProtectedTimeStamp.ProtectedTimeStamps {
+			if timeStamp.Before(maxBehind) {
+				maxBehind = timeStamp
+			}
+		}
+		m.muProtectedTimeStamp.Unlock()
+		return now.Sub(maxBehind).Nanoseconds()
 	})
 
 	return m
