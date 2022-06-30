@@ -888,3 +888,12 @@ SELECT '127.001.002.003'::INET, '127.001.002.003/016'::INET, '010.001.002.003'::
 127.1.2.3 127.1.2.3/16 10.1.2.3
 
 subtest end
+
+# Test inet
+
+statement error pq: inet(): could not convert to INet: 'some_invalid_value'
+SELECT inet('some_invalid_value')
+
+SELECT inet('::111')
+----
+::111
