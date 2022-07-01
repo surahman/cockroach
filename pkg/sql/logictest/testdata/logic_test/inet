@@ -894,6 +894,7 @@ subtest end
 query error pq: inet\(\): could not convert to INet: 'some_invalid_value'
 SELECT inet('some_invalid_value')
 
+query T
 SELECT inet('::111')
 ----
 ::111
