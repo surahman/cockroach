@@ -894,9 +894,6 @@ subtest end
 query error pq: inet\(\): could not convert to INet: 'some_invalid_value'
 SELECT inet('some_invalid_value')
 
-query error pq: inet\(\): could not parse "localhost" as inet. invalid IP
-SELECT inet('localhost'::INET)
-
 query T
 SELECT inet('::111')
 ----
@@ -921,5 +918,3 @@ query T
 SELECT inet('::ffff:192.168.0.1/24'::INET)
 ----
 ::ffff:192.168.0.1/24
-
-
