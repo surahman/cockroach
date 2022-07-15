@@ -1043,17 +1043,16 @@ var regularBuiltins = map[string]builtinDefinition{
 
 	"inet": makeBuiltin(defProps(),
 		tree.Overload{
-			Types:      tree.ArgTypes{{"val", types.Any}},
+			Types:      tree.ArgTypes{{"val", types.String}},
 			ReturnType: tree.FixedReturnType(types.INet),
 			Fn: func(ctx *eval.Context, args tree.Datums) (tree.Datum, error) {
 				inet, err := eval.PerformCast(ctx, args[0], types.INet)
 				if err != nil {
-					return nil, pgerror.Newf(
-						pgcode.InvalidParameterValue, "could not convert to INet: %s", args[0])
+					return nil, pgerror.WithCandidateCode(err, pgcode.InvalidTextRepresentation)
 				}
 				return inet, nil
 			},
-			Info:       "If possible, converts input to that of type INet.",
+			Info:       "If possible, converts input to that of type inet.",
 			Volatility: volatility.Immutable,
 		},
 	),

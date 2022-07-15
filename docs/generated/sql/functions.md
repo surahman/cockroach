@@ -1,12 +1,3 @@
-### ANYELEMENT functions
-
-<table>
-<thead><tr><th>Function &rarr; Returns</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td><a name="inet"></a><code>inet(val: anyelement) &rarr; <a href="inet.html">inet</a></code></td><td><span class="funcdesc"><p>If possible, converts input to that of type INet.</p>
-</span></td></tr></tbody>
-</table>
-
 ### Array functions
 
 <table>
@@ -2716,6 +2707,8 @@ The output can be used to recreate a database.’</p>
 <tr><td><a name="get_bit"></a><code>get_bit(byte_string: <a href="bytes.html">bytes</a>, index: <a href="int.html">int</a>) &rarr; <a href="int.html">int</a></code></td><td><span class="funcdesc"><p>Extracts a bit at the given index in the byte array.</p>
 </span></td><td>Immutable</td></tr>
 <tr><td><a name="get_byte"></a><code>get_byte(byte_string: <a href="bytes.html">bytes</a>, index: <a href="int.html">int</a>) &rarr; <a href="int.html">int</a></code></td><td><span class="funcdesc"><p>Extracts a byte at the given index in the byte array.</p>
+</span></td><td>Immutable</td></tr>
+<tr><td><a name="inet"></a><code>inet(val: <a href="string.html">string</a>) &rarr; <a href="inet.html">inet</a></code></td><td><span class="funcdesc"><p>If possible, converts input to that of type inet.</p>
 </span></td><td>Immutable</td></tr>
 <tr><td><a name="initcap"></a><code>initcap(val: <a href="string.html">string</a>) &rarr; <a href="string.html">string</a></code></td><td><span class="funcdesc"><p>Capitalizes the first letter of <code>val</code>.</p>
 </span></td><td>Immutable</td></tr>
