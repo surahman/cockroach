@@ -506,18 +506,16 @@ func (a *AggMetrics) getOrCreateScope(scope string) (*sliMetrics, error) {
 
 // Metrics are for production monitoring of changefeeds.
 type Metrics struct {
-	AggMetrics                    *AggMetrics
-	KVFeedMetrics                 kvevent.Metrics
-	SchemaFeedMetrics             schemafeed.Metrics
-	Failures                      *metric.Counter
-	ResolvedMessages              *metric.Counter
-	QueueTimeNanos                *metric.Counter
-	CheckpointHistNanos           *metric.Histogram
-	FrontierUpdates               *metric.Counter
-	ThrottleMetrics               cdcutils.Metrics
-	ReplanCount                   *metric.Counter
-	ProtectedTimeStamp            time.Time
-	ProtectedTimeStampBehindNanos *metric.Gauge
+	AggMetrics          *AggMetrics
+	KVFeedMetrics       kvevent.Metrics
+	SchemaFeedMetrics   schemafeed.Metrics
+	Failures            *metric.Counter
+	ResolvedMessages    *metric.Counter
+	QueueTimeNanos      *metric.Counter
+	CheckpointHistNanos *metric.Histogram
+	FrontierUpdates     *metric.Counter
+	ThrottleMetrics     cdcutils.Metrics
+	ReplanCount         *metric.Counter
 
 	mu struct {
 		syncutil.Mutex
