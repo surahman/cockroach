@@ -202,11 +202,10 @@ func (rsl StateLoader) SetRangeAppliedState(
 		RaftAppliedIndex:     appliedIndex,
 		LeaseAppliedIndex:    leaseAppliedIndex,
 		RangeStats:           newMS.ToPersistentStats(),
+		RaftClosedTimestamp:  raftClosedTimestamp,
 		RaftAppliedIndexTerm: appliedIndexTerm,
 	}
-	if !raftClosedTimestamp.IsEmpty() {
-		as.RaftClosedTimestamp = raftClosedTimestamp
-	}
+
 	// The RangeAppliedStateKey is not included in stats. This is also reflected
 	// in ComputeStatsForRange.
 	ms := (*enginepb.MVCCStats)(nil)
