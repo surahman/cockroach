@@ -232,7 +232,7 @@ func (rsl StateLoader) SetMVCCStats(
 
 // SetClosedTimestamp overwrites the closed timestamp.
 func (rsl StateLoader) SetClosedTimestamp(
-	ctx context.Context, readWriter storage.ReadWriter, closedTS *hlc.Timestamp,
+	ctx context.Context, readWriter storage.ReadWriter, closedTS hlc.Timestamp,
 ) error {
 	as, err := rsl.LoadRangeAppliedState(ctx, readWriter)
 	if err != nil {
@@ -241,7 +241,7 @@ func (rsl StateLoader) SetClosedTimestamp(
 	alloc := as // reuse
 	return rsl.SetRangeAppliedState(
 		ctx, readWriter, as.RaftAppliedIndex, as.LeaseAppliedIndex, as.RaftAppliedIndexTerm,
-		as.RangeStats.ToStatsPtr(), *closedTS, alloc)
+		as.RangeStats.ToStatsPtr(), closedTS, alloc)
 }
 
 // LoadGCThreshold loads the GC threshold.
