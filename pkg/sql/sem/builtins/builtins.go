@@ -7198,6 +7198,22 @@ that has execution latency greater than the 'minExecutionLatency'. If the
 expires until the statement bundle is collected`,
 		},
 	),
+
+	"crdb_internal.expire_gossip_info": makeBuiltin(
+		tree.FunctionProperties{Category: builtinconstants.CategorySystemRepair},
+		tree.Overload{
+			Types:      tree.ArgTypes{{"key", types.String}},
+			ReturnType: tree.FixedReturnType(types.Bool),
+			Fn: func(ctx *eval.Context, args tree.Datums) (tree.Datum, error) {
+				key := string(tree.MustBeDString(args[0]))
+				_ = key // REMOVE
+
+				return tree.DBoolTrue, nil
+			},
+			Info:       "Sets a one minute TTL for gossip information for a given gossip key. Returns True on success.",
+			Volatility: volatility.Volatile,
+		},
+	),
 }
 
 var lengthImpls = func(incBitOverload bool) builtinDefinition {
